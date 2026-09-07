@@ -1,0 +1,12 @@
+{
+  "endpoint": "https://overpass-api.de/api/interpreter",
+  "retrieved_at": "2026-09-07T03:46:29.803777Z",
+  "sha256": "47f5be154fecae986daad73793947e53de7627d94bab1d08bf707934678adb6a",
+  "query": "[out:json][timeout:30][maxsize:16777216];\n(way[\"building\"][\"building\"!=\"no\"](41.882,-87.634,41.890,-87.624);relation[\"building\"][\"building\"!=\"no\"][\"type\"=\"multipolygon\"](41.882,-87.634,41.890,-87.624););\nout body geom;\n",
+  "query_bbox": [
+    -87.634,
+    41.882,
+    -87.624,
+    41.89
+  ]
+}

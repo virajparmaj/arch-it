@@ -2,11 +2,11 @@
 
 A map for discovering the built world. The longer-term discovery loop is **building → architect or firm → other buildings**, with sources attached to important facts.
 
-## First prototype
+## Current prototype — phase 02
 
-The current application opens an interactive world map centered on Chicago. Pan and zoom, jump to Chicago, London, Mumbai, or New York, reset north, and locate yourself on demand. It includes a responsive layout, live center coordinates, attribution, and loading/retry feedback.
+The application opens an interactive map centered on a Chicago Loop pilot. Select one of **345 highlighted building footprints** to inspect its recorded name (when available), centroid, geometry, stable internal ID, OSM identifier, and provenance. The dashed outline marks the pilot boundary. Pan and zoom globally, jump between cities, reset north, and locate yourself on demand. Other cities have a basemap only.
 
-**Building selection, architect information, search, and photos are not implemented yet.** Buildings visible in the basemap are cartography, not imported building records. The repository is intended to become open source; a code license has not been selected yet.
+**Architect information, search, and photos are not implemented yet.** Colored pilot footprints are canonical records; other buildings visible in the basemap remain cartography. The repository is intended to become open source; a code license has not been selected yet.
 
 ## Run locally
 
@@ -25,7 +25,7 @@ npm run test     # run map lifecycle tests on their own
 npm run preview  # serve the production build after npm run build
 ```
 
-The application needs internet access for the basemap. No API key, database, Python environment, or sign-in is required. Device location is optional and requested only using the map's locate button. Browsers require HTTPS or localhost for geolocation; actual permission prompts depend on the browser and operating system.
+The application loads a bundled building snapshot and needs internet access for the basemap. No API key, database, Python environment, or sign-in is required. Device location is optional and requested only using the map's locate button. Browsers require HTTPS or localhost for geolocation; actual permission prompts depend on the browser and operating system.
 
 ## Configuration
 
@@ -40,6 +40,7 @@ apps/web/           React application and static assets
   src/features/map/ Map lifecycle, navigation, and provider configuration
   src/components/   Application-level components
   src/types/        Frontend contracts
+pipelines/          Offline, reproducible OSM import and geometry tests
 phases/             Detailed, reusable prompts for phases 00–13
 docs/               Architecture, sources, decisions, and verification
 .openai/hosting.json Optional Sites deployment binding
@@ -49,11 +50,15 @@ The app lives in `apps/web`, while one root package manifest and lockfile keep d
 
 ## Work one phase at a time
 
-Start with [the phase index](phases/README.md). Each prompt defines prerequisites, implementation scope, exclusions, acceptance checks, and a stop/reassessment point. Phases 00 and 01 form this prototype; [phase 02](phases/phase-02-building-footprints.md) adds the first real clickable building dataset.
+Start with [the phase index](phases/README.md). Each prompt defines prerequisites, implementation scope, exclusions, acceptance checks, and a stop/reassessment point. Phases 00–02 are implemented. The [phase 02 report](docs/PHASE_02.md) records source selection, coverage, evidence, and limitations. Phase 03 expands the building information panel.
 
-Example follow-up: “Implement phase 02 using `phases/phase-02-building-footprints.md`. Inspect the current prototype first and stop after its acceptance checks.”
+Example follow-up: “Implement phase 03 using `phases/phase-03-information-panel.md`. Inspect the current prototype first and stop after its acceptance checks.”
 
 See [architecture](docs/ARCHITECTURE.md), [decisions and debt](docs/DECISIONS.md), [data sources and licensing](docs/DATA_SOURCES.md), and [verification](docs/VERIFICATION.md).
+
+## Reproduce the building dataset
+
+The cached source, acquisition metadata, derived GeoJSON, and ODbL notice live in `apps/web/public/data/chicago-loop/`. The web app makes no Overpass requests. See [the import instructions](pipelines/openstreetmap/README.md) for offline rebuilds, seven Python geometry tests, and an opt-in bounded acquisition script. Python 3.12+ is needed only for import work; running the app still requires only Node/npm.
 
 ## Hosting
 

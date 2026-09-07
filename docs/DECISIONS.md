@@ -23,7 +23,7 @@ The owner has not selected a code license. MIT was recommended, but no answer wa
 
 ## Known limitations / production work
 
-- No building dataset, building selection, architect entities, photos, search, or accounts yet.
+- Building selection covers only the 345 imported Chicago footprints. Architect entities, photos, search, and accounts are not implemented.
 - Public map-service availability and network speed affect the application; cached areas are not an offline product.
 - The map requires WebGL and a supported browser/GPU. Geolocation depends on HTTPS, device settings, and permission.
 - The renderer is a large dependency. Its separate chunk is deliberate; measure on target mobile devices before expanding map layers. Do not silence bundle warnings by raising the threshold.
@@ -31,6 +31,16 @@ The owner has not selected a code license. MIT was recommended, but no answer wa
 - The initial page has no server rendering or persistent map URL. Add routing only when a phase requires it.
 - A free initial frontend and basemap do not imply free global ingestion, storage, enrichment, and tile distribution at scale.
 
+## Phase 02 decisions
+
+- Use a cached OSM extract after comparing a real 12-building Overture subset, whose footprints all originated from OSM. See [the source comparison](PHASE_02.md).
+- Preserve full source geometry and omit boundary-crossing records instead of clipping them. The pilot is not an exhaustive inventory.
+- UUIDv5 identity uses the source namespace, object type, and ID. Future upstream splits/merges and cross-source matches require reconciliation.
+- Keep the raw response and acquisition checksum beside a distinct derived GeoJSON artifact, both downloadable with ODbL attribution.
+- Shapely/NumPy are pinned offline dependencies. No new frontend runtime dependency or server is introduced.
+- Preserve string building IDs in renderer properties with `promoteId` and property-based picking/filtering; raw UUID feature IDs are coerced by vector serialization.
+- Reject unsupported nested outer islands explicitly. Preserve independently building-tagged inner member ways during relation deduplication.
+
 ## Next useful milestone
 
-Finish reviewing the first map, then follow `phases/phase-02-building-footprints.md`. Validate a bounded footprint source and pilot before choosing static GeoJSON, PMTiles, or a spatial backend. Keep the first ingestion reproducible and retain identifiers and licenses from the start.
+Review the Chicago selection experience, then follow `phases/phase-03-information-panel.md`. Expand sourced fields and presentation incrementally. The current data size supports static delivery; backend persistence still needs a concrete query/editing requirement.

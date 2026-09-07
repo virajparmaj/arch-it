@@ -4,6 +4,8 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { RefreshCw, WifiOff, X } from 'lucide-react'
 import { INITIAL_CITY, MAP_STYLE_URL } from './config'
 import type { MapDestination, MapView } from '../../types/map'
+import type { BuildingDataset, BuildingFeature, BuildingMiss } from '../../types/building'
+import { mountBuildingLayers, setBuildingSelection } from '../buildings/layers'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
 // MapLibre 6 ships a separate worker; Vite must bundle its sibling imports too.
@@ -13,12 +15,16 @@ interface MapCanvasProps {
   destination: MapDestination
   onViewChange: (view: MapView) => void
   onExplore: () => void
+  buildings?: BuildingDataset | null
+  selectedBuildingId?: string | null
+  onBuildingSelect?: (building: BuildingFeature) => void
+  onBuildingMiss?: (reason: BuildingMiss) => void
 }
 
 type MapStatus = 'loading' | 'ready' | 'unavailable' | 'unsupported'
 const CONTEXT_LOST_NOTICE = 'The map display was interrupted. Reload the map to restore it.'
 
-export default function MapCanvas({ destination, onViewChange, onExplore }: MapCanvasProps) {
+export default function MapCanvas({ destination, onViewChange, onExplore, buildings, selectedBuildingId, onBuildingSelect, onBuildingMiss }: MapCanvasProps) {
   const container = useRef<HTMLDivElement>(null)
   const instance = useRef<Map | null>(null)
   const lastView = useRef({ center: INITIAL_CITY.center, zoom: INITIAL_CITY.zoom })
@@ -126,6 +132,16 @@ export default function MapCanvas({ destination, onViewChange, onExplore }: MapC
       duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1600,
     })
   }, [destination])
+
+  useEffect(() => {
+    const map = instance.current
+    if (status !== 'ready' || !map || !buildings || !onBuildingSelect || !onBuildingMiss) return
+    return mountBuildingLayers(map, buildings, onBuildingSelect, onBuildingMiss)
+  }, [status, buildings, onBuildingSelect, onBuildingMiss])
+
+  useEffect(() => {
+    if (status === 'ready' && instance.current && buildings) setBuildingSelection(instance.current, selectedBuildingId ?? null)
+  }, [status, buildings, selectedBuildingId])
 
   function retry() {
     setStatus('loading')

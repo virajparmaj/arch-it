@@ -2,7 +2,7 @@
 
 ## Product and implemented boundary
 
-Arch It will support building → architect/firm → other buildings discovery with source-backed facts, including ordinary buildings. The first prototype implements only world-map exploration. It has no canonical building dataset, API, accounts, database, ingestion, or persistent user state.
+Arch It will support building → architect/firm → other buildings discovery with source-backed facts, including ordinary buildings. The current prototype supports world-map exploration plus 345 canonical building footprints within a bounded Chicago Loop pilot. It includes one offline OSM import adapter and a static dataset. It has no API, accounts, database, or persistent user state.
 
 The browser renders a React 18 application written in strict TypeScript. Vite serves development source and builds static output. A lazily loaded MapLibre GL JS component requests an OpenFreeMap style, tiles, sprites, and glyphs directly. Map controls handle pan/zoom/orientation and optional geolocation. City shortcuts are hardcoded camera destinations, not search results or architecture records.
 
@@ -24,11 +24,17 @@ Vitest uses the Vite toolchain to verify lifecycle behavior. jsdom supplies a si
 
 Use one root npm manifest and lockfile. Vite's root is `apps/web`; its environment directory is the repository root and output directory is `dist`. Every `VITE_*` value is public build-time configuration. The default style works with no environment file or key. Static HTTPS hosting is sufficient; the Sites binding is replaceable and is not an application dependency.
 
+## Building layer and data boundary
+
+The `features/buildings` module fetches and validates a bundled GeoJSON snapshot, mounts a selectable layer, and renders a compact inspection card. Picking is restricted to that layer. Renderer properties retain `building_id` and the source uses `promoteId`; selection never trusts unstable basemap or serialized UUID feature IDs. Fetch retries are independent of basemap retries. A destroyed renderer is detected before layer cleanup.
+
+The Python adapter, raw/derived records, identity rules, licensing, source comparison, and limitations are documented in [phase 02](PHASE_02.md) and the [pipeline README](../pipelines/openstreetmap/README.md). Provenance now exists in the first imported dataset, with raw source kept separately from normalized/displayed values.
+
 ## Next architecture checkpoint
 
-Phase 02 should add a small reproducible pilot building dataset with stable IDs and a selectable layer. Prefer bounded static delivery while that satisfies the actual dataset. Choose the source by inspecting available identifiers, geometry, metadata, size, and license. The initial Chicago camera is a provisional pilot, not a global data-coverage commitment.
+Phase 03 should expand the building inspection UI on the existing typed, sourced data contract. The ~305 kB derived artifact is small enough for static delivery; no spatial server is justified yet.
 
-Provenance must begin with the first import. Separate external source records, canonical identity matches, sourced claims, and display preferences. Use stable internal IDs plus source namespace/type/ID; do not use names or transient basemap feature IDs as canonical identity. Distinguish OSM ways from relations. Represent people and organizations separately, with sourced contributor roles. Keep missing facts absent and conflicting claims intact. Phase 10 improves provenance UI rather than adding provenance storage for the first time.
+Provenance began with the first import. Separate external source records, canonical identity matches, sourced claims, and display preferences. Use stable internal IDs plus source namespace/type/ID; do not use names or transient basemap feature IDs as canonical identity. Distinguish OSM ways from relations. Represent people and organizations separately, with sourced contributor roles. Keep missing facts absent and conflicting claims intact. Phase 10 improves provenance UI rather than adding provenance storage for the first time.
 
 When actual query or editing needs justify persistence, introduce one modular FastAPI service with PostgreSQL/PostGIS and migrations. Add isolated Python import adapters, generated API contracts, and search incrementally. Shared packages, PMTiles, DuckDB, and heavier geospatial libraries require a concrete use case. No initial graph database, search cluster, queue, or microservices.
 

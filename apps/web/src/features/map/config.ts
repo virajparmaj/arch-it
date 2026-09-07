@@ -1,7 +1,7 @@
 import type { City } from '../../types/map'
 
 export const CITIES: City[] = [
-  { id: 'chicago', name: 'Chicago', country: 'United States', center: [-87.6298, 41.8868], zoom: 14 },
+  { id: 'chicago', name: 'Chicago', country: 'United States', center: [-87.629, 41.886], zoom: 15.5 },
   { id: 'london', name: 'London', country: 'United Kingdom', center: [-0.1276, 51.5072], zoom: 13 },
   { id: 'mumbai', name: 'Mumbai', country: 'India', center: [72.8311, 18.9388], zoom: 14 },
   { id: 'new-york', name: 'New York', country: 'United States', center: [-73.9851, 40.7589], zoom: 13 },

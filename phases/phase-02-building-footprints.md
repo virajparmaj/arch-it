@@ -1,6 +1,6 @@
 # Phase 02 — Clickable building footprints
 
-Status: **Planned**
+Status: **Implemented; automated checks passed; interactive acceptance review pending** — see [phase 02 report](../docs/PHASE_02.md).
 
 ## Objective and prerequisites
 
