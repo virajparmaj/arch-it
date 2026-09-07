@@ -3,6 +3,8 @@ import { createRoot, type Root } from 'react-dom/client'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import MapCanvas from './MapCanvas'
 import { CITIES } from './config'
+import { readFileSync } from 'node:fs'
+import { parseBuildingDataset } from '../buildings/data'
 
 type EventPayload = { originalEvent?: Event; error?: Error; code?: number }
 type EventHandler = (event: EventPayload) => void
@@ -14,21 +16,35 @@ const doubles = vi.hoisted(() => {
 
   class EventSource {
     handlers = new Map<string, EventHandler[]>()
-    on(name: string, handler: EventHandler) {
+    on(name: string, layerOrHandler: string | EventHandler, delegatedHandler?: EventHandler) {
+      const handler = typeof layerOrHandler === 'function' ? layerOrHandler : delegatedHandler!
       this.handlers.set(name, [...(this.handlers.get(name) ?? []), handler])
       return this
     }
+    off(name: string) { this.handlers.delete(name); return this }
     emit(name: string, event: EventPayload = {}) {
       this.handlers.get(name)?.forEach((handler) => handler(event))
     }
   }
 
   class Renderer extends EventSource {
+    styleReady = false
     flyTo = vi.fn()
-    remove = vi.fn()
+    remove = vi.fn(() => this.emit('remove'))
     addControl = vi.fn()
+    addSource = vi.fn(() => { if (!this.styleReady) throw new Error('Style is not done loading.') })
+    addLayer = vi.fn()
+    getStyle = () => ({ layers: [] })
+    getLayer = () => false
+    getSource = () => false
+    getCanvas = () => document.createElement('canvas')
+    setFilter = vi.fn()
     getCenter = () => ({ lng: -87.6298, lat: 41.8868 })
     getZoom = () => 14
+    emit(name: string, event: EventPayload = {}) {
+      if (name === 'load') this.styleReady = true
+      super.emit(name, event)
+    }
     constructor() {
       super()
       if (failure.enabled) throw new Error('WebGL unavailable')
@@ -155,5 +171,23 @@ describe('map lifecycle and recovery', () => {
     act(() => root.render(null))
     expect(map.remove).toHaveBeenCalledOnce()
     expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('waits for the replacement renderer before attaching building layers', () => {
+    const buildings = parseBuildingDataset(JSON.parse(readFileSync('apps/web/public/data/chicago-loop/buildings.geojson', 'utf8')))
+    const select = vi.fn()
+    const miss = vi.fn()
+    const destination = { city: CITIES[0], request: 0 }
+    act(() => root.render(<MapCanvas destination={destination} onViewChange={onViewChange} onExplore={onExplore} buildings={buildings} onBuildingSelect={select} onBuildingMiss={miss} />))
+    const first = latestMap()
+    act(() => first.emit('load'))
+    expect(first.addSource).toHaveBeenCalledTimes(2)
+    // Replacing a callback recreates the renderer while React retains the previous ready state.
+    act(() => root.render(<MapCanvas destination={destination} onViewChange={vi.fn()} onExplore={onExplore} buildings={buildings} onBuildingSelect={select} onBuildingMiss={miss} />))
+    const replacement = latestMap()
+    expect(first.remove).toHaveBeenCalledOnce()
+    expect(replacement.addSource).not.toHaveBeenCalled()
+    act(() => replacement.emit('load'))
+    expect(replacement.addSource).toHaveBeenCalledTimes(2)
   })
 })

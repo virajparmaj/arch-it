@@ -27,7 +27,7 @@ Open one phase prompt, inspect current code and documentation, and adapt the bri
 
 The current prototype implements phases 00–02 in `apps/web`, using React, TypeScript, Vite, MapLibre GL JS, and OpenFreeMap. The map is globally navigable; canonical building coverage is a 345-footprint Chicago Loop pilot. Future briefs describe decisions and outcomes without prebuilding services.
 
-See [verification evidence](../docs/VERIFICATION.md) before marking phase 01 fully accepted. The current prototype passes lint, TypeScript, 19 frontend tests, seven Python import tests, and a production build. See [phase 02 evidence](../docs/PHASE_02.md). Review building selection before starting phase 03.
+See [verification evidence](../docs/VERIFICATION.md) before marking phase 01 fully accepted. The current prototype passes lint, TypeScript, 20 frontend tests, seven Python import tests, and a production build. See [phase 02 evidence](../docs/PHASE_02.md). Review building selection before starting phase 03.
 
 Provenance begins with the first imported record in phase 02. Phase 10 improves presentation and review. Basemap features are not canonical building identities. Never invent missing facts or collapse conflicting source claims.
 

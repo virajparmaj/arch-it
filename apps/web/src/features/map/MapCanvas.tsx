@@ -29,6 +29,7 @@ export default function MapCanvas({ destination, onViewChange, onExplore, buildi
   const instance = useRef<Map | null>(null)
   const lastView = useRef({ center: INITIAL_CITY.center, zoom: INITIAL_CITY.zoom })
   const [status, setStatus] = useState<MapStatus>('loading')
+  const [loadedMap, setLoadedMap] = useState<Map | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
 
@@ -94,6 +95,7 @@ export default function MapCanvas({ destination, onViewChange, onExplore, buildi
       hasLoaded = true
       window.clearTimeout(timeout)
       setStatus('ready')
+      setLoadedMap(map)
       updateView()
     })
     map.on('error', (event) => {
@@ -134,14 +136,14 @@ export default function MapCanvas({ destination, onViewChange, onExplore, buildi
   }, [destination])
 
   useEffect(() => {
-    const map = instance.current
-    if (status !== 'ready' || !map || !buildings || !onBuildingSelect || !onBuildingMiss) return
-    return mountBuildingLayers(map, buildings, onBuildingSelect, onBuildingMiss)
-  }, [status, buildings, onBuildingSelect, onBuildingMiss])
+    // Readiness belongs to a renderer instance, not a boolean retained across HMR/retry.
+    if (!loadedMap || loadedMap !== instance.current || !buildings || !onBuildingSelect || !onBuildingMiss) return
+    return mountBuildingLayers(loadedMap, buildings, onBuildingSelect, onBuildingMiss)
+  }, [loadedMap, buildings, onBuildingSelect, onBuildingMiss])
 
   useEffect(() => {
-    if (status === 'ready' && instance.current && buildings) setBuildingSelection(instance.current, selectedBuildingId ?? null)
-  }, [status, buildings, selectedBuildingId])
+    if (loadedMap && loadedMap === instance.current && buildings) setBuildingSelection(loadedMap, selectedBuildingId ?? null)
+  }, [loadedMap, buildings, selectedBuildingId])
 
   function retry() {
     setStatus('loading')

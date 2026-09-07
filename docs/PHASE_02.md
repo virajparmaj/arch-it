@@ -56,9 +56,11 @@ map use. MapLibre retains its large renderer/worker bundle from phase 01.
 
 ## Verification and limitations
 
-The 19 frontend tests cover existing map lifecycle behavior, actual dataset
+The 20 frontend tests cover existing map lifecycle behavior, actual dataset
 validation, canonical selection after ID coercion, switching hits, coverage/zoom/
-empty clicks, layer cleanup, and failed-download recovery. Seven Python tests
+empty clicks, layer cleanup, replacement-renderer readiness, and failed-download
+recovery. Building layers wait for the specific map instance to load, including
+after development reloads or retries. Seven Python tests
 cover byte-identical rebuilds, order/name-independent IDs, valid pilot geometry,
 courtyard holes, explicit nested-island exclusion, inner-building preservation,
 and partial-response rejection. Lint, TypeScript, and the static build pass.

@@ -40,7 +40,7 @@ Browser-rendered map behavior, mobile touch interaction, screen-reader behavior,
 Implemented on 2026-09-06 (America/Chicago). The user requested the next phase; no browser acceptance of phase 01 is inferred from that request.
 
 - Frontend lint and strict TypeScript: passed.
-- Vitest: 19 tests passed, including existing map lifecycle, actual pilot data validation, UUID preservation across numeric renderer IDs, selection switching, outside/empty/zoomed-out clicks, map/layer disposal, and independent download retry/abort.
+- Vitest: 20 tests passed, including existing map lifecycle, actual pilot data validation, UUID preservation across numeric renderer IDs, selection switching, outside/empty/zoomed-out clicks, map/layer disposal, replacement-renderer readiness, and independent download retry/abort.
 - Python 3.14.7 / Shapely 2.1.2 / NumPy 2.5.3: seven import tests passed.
 - Reimport from the cached source is byte-identical; reversing source order preserves both IDs and the artifact. Names are not part of identity.
 - The 345 imported geometries are valid. Source has 358 records; 13 boundary-crossing records are explicitly excluded. There are 161 sourced names and 184 null names.
