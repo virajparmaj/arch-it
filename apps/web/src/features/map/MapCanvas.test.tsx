@@ -48,6 +48,7 @@ vi.mock('maplibre-gl', () => ({
   NavigationControl: class {},
   ScaleControl: class {},
   GeolocateControl: doubles.Locator,
+  setWorkerUrl: vi.fn(),
 }))
 
 let host: HTMLDivElement

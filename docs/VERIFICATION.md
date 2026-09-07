@@ -28,7 +28,8 @@ Executed on 2026-09-06 (America/Chicago), using Node 25.2.1 and npm 11.12.1:
 - ESLint: passed.
 - Strict TypeScript check: passed.
 - Vitest/jsdom: 7 map lifecycle tests passed, covering loaded state, navigation/reduced motion, stalled-load retry, initialization failure, denied geolocation, context restoration, and unmount cleanup. MapLibre is mocked in these tests.
-- Production build: passed. Main JavaScript ~150 kB (~50 kB gzip); lazy renderer ~996 kB (~262 kB gzip). Vite's >500 kB chunk warning remains visible and documented.
+- Production build: passed. Main JavaScript ~150 kB (~50 kB gzip); lazy renderer ~996 kB (~262 kB gzip), plus a separate ~486 kB worker. Vite's >500 kB chunk warning remains visible and documented.
+- A development-server log exposed MapLibre 6's missing inferred worker URL. Fixed using the official `?worker&url` integration. The build now verifies that the map references a shipped, self-contained worker; the development worker URL returned actual JavaScript successfully over HTTP.
 - Local development URL: HTTP 200; preview opened in Codex.
 - OpenFreeMap Positron style: fetched successfully, 55 layers. Source TileJSON includes OpenFreeMap/OpenMapTiles/OSM attribution. A representative Chicago z14 tile fetched successfully (446,634 bytes).
 

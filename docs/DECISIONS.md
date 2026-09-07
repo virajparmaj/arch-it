@@ -13,6 +13,7 @@
 | Native controls and system fonts | Few dependencies, no font service requests | More complex accessible UI primitives are required |
 | Lucide React icons | Consistent, accessible interface iconography | No planned replacement |
 | Lazy map module | Let the shell load independently of the large renderer | Measured loading problems justify deeper optimization |
+| Explicit bundled MapLibre worker | MapLibre 6's inferred URL breaks in Vite output; `?worker&url` includes required worker code | Recheck with any major renderer/bundler upgrade |
 | Vitest + jsdom for lifecycle tests | Check recovery and cleanup using the existing Vite toolchain | Add real browser coverage when that is the next validation scope |
 | Source provenance from phase 02 | Preserve evidence before normalization loses it | Extend based on actual records, never remove this boundary |
 

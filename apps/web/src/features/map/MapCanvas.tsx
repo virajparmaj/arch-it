@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Map, NavigationControl, ScaleControl, GeolocateControl } from 'maplibre-gl'
+import { Map, NavigationControl, ScaleControl, GeolocateControl, setWorkerUrl } from 'maplibre-gl'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { RefreshCw, WifiOff, X } from 'lucide-react'
 import { INITIAL_CITY, MAP_STYLE_URL } from './config'
 import type { MapDestination, MapView } from '../../types/map'
 import 'maplibre-gl/dist/maplibre-gl.css'
+
+// MapLibre 6 ships a separate worker; Vite must bundle its sibling imports too.
+setWorkerUrl(workerUrl)
 
 interface MapCanvasProps {
   destination: MapDestination

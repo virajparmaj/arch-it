@@ -16,6 +16,8 @@ The browser renders a React 18 application written in strict TypeScript. Vite se
 
 The MapLibre dependency is loaded separately so the application shell does not wait for the renderer bundle. Map state updates after camera movement; React does not rerender every animation frame. MapLibre's built-in resize observer keeps the canvas sized to its panel. Retry recreates the map, and geolocation does not start automatically.
 
+MapLibre 6 is ESM-only and requires an explicit worker URL when bundled. Import its worker with Vite's `?worker&url` and pass it to `setWorkerUrl` before creating the map. Plain `?url` does not bundle the worker's sibling imports. `scripts/verify-build.mjs` checks that the production map references a shipped, self-contained worker. See the [official ESM integration](https://maplibre.org/maplibre-gl-js/docs/#esm).
+
 Vitest uses the Vite toolchain to verify lifecycle behavior. jsdom supplies a simulated document, and the tests substitute a controlled renderer to exercise load, city navigation, reduced motion, timeouts/retry, initialization failure, geolocation denial, context restoration, and disposal. These tests do not prove real WebGL rendering or actual device-permission behavior.
 
 ## Environment and delivery
