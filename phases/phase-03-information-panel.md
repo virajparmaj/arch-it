@@ -1,6 +1,6 @@
 # Phase 03 — Building information panel
 
-Status: **Planned**
+Status: **Implemented; automated checks and local desktop/mobile browser verification passed** — see [phase 03 report](../docs/PHASE_03.md). See [Phase 04](../docs/PHASE_04.md) for the later metadata extension and current publishing status.
 
 ## Objective and prerequisites
 

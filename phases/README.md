@@ -9,8 +9,8 @@ This folder is the working roadmap for Arch-IT: explore a building, discover its
 | 00 | [Foundation](phase-00-foundation.md) | Implemented; build/checks passed |
 | 01 | [Working map](phase-01-working-map.md) | Implemented; interactive acceptance review pending |
 | 02 | [Building footprints](phase-02-building-footprints.md) | Implemented; automated checks passed; interactive review pending |
-| 03 | [Building information panel](phase-03-information-panel.md) | Planned |
-| 04 | [OSM architecture metadata](phase-04-osm-architecture.md) | Planned |
+| 03 | [Building information panel](phase-03-information-panel.md) | Implemented; checks and local browser verification passed |
+| 04 | [OSM architecture metadata](phase-04-osm-architecture.md) | Implemented; checks and local browser verification passed; publishing unverified |
 | 05 | [Wikidata enrichment](phase-05-wikidata-enrichment.md) | Planned |
 | 06 | [Architect pages](phase-06-architect-pages.md) | Planned |
 | 07 | [Search](phase-07-search.md) | Planned |
@@ -25,9 +25,9 @@ This folder is the working roadmap for Arch-IT: explore a building, discover its
 
 Open one phase prompt, inspect current code and documentation, and adapt the brief to repository evidence. Execute its scoped milestone, keep the application runnable, verify its acceptance checks, then record the result here. A phase is complete only after verification; do not infer completion from files or UI placeholders. Stop after the selected milestone and reassess before beginning the next phase.
 
-The current prototype implements phases 00–02 in `apps/web`, using React, TypeScript, Vite, MapLibre GL JS, and OpenFreeMap. The map is globally navigable; canonical building coverage is a 345-footprint Chicago Loop pilot. Future briefs describe decisions and outcomes without prebuilding services.
+The current prototype implements phases 00–04 in `apps/web`, using React, TypeScript, Vite, MapLibre GL JS, and OpenFreeMap. The map is globally navigable; canonical building coverage is a 345-footprint Chicago Loop pilot. Phase 04 exposes 1,839 claims from the same cached source. Future briefs describe decisions and outcomes without prebuilding services.
 
-See [verification evidence](../docs/VERIFICATION.md) before marking phase 01 fully accepted. The current prototype passes lint, TypeScript, 20 frontend tests, seven Python import tests, and a production build. See [phase 02 evidence](../docs/PHASE_02.md). Review building selection before starting phase 03.
+See [verification evidence](../docs/VERIFICATION.md) before marking phase 01 fully accepted. The current prototype passes lint, TypeScript, 36 frontend tests, 15 Python import tests, and a production build. Phase 03 selection/focus behavior is preserved; [Phase 04](../docs/PHASE_04.md) records conservative tag semantics, coverage, reproducibility, and actual browser checks. Earlier broad device and failure-mode checks remain explicitly scoped in verification. Stop after Phase 04; no Wikidata enrichment has started.
 
 Provenance begins with the first imported record in phase 02. Phase 10 improves presentation and review. Basemap features are not canonical building identities. Never invent missing facts or collapse conflicting source claims.
 

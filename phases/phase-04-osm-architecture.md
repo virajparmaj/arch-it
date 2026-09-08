@@ -1,6 +1,6 @@
 # Phase 04 — OpenStreetMap architecture metadata
 
-Status: **Planned**
+Status: **Implemented; import checks and local desktop/mobile browser verification passed** — see [Phase 04 report](../docs/PHASE_04.md) for semantics, coverage, and publishing status. Phase 05 remains planned.
 
 ## Objective and prerequisites
 

@@ -27,7 +27,7 @@ The owner has not selected a code license. MIT was recommended, but no answer wa
 - Public map-service availability and network speed affect the application; cached areas are not an offline product.
 - The map requires WebGL and a supported browser/GPU. Geolocation depends on HTTPS, device settings, and permission.
 - The renderer is a large dependency. Its separate chunk is deliberate; measure on target mobile devices before expanding map layers. Do not silence bundle warnings by raising the threshold.
-- Browser/device behavior, touch layouts, screen-reader use, and real location permissions require the interactive checks in `VERIFICATION.md`; automated build/resource checks cannot establish those outcomes.
+- Phases 03 and 04 include actual browser checks of map rendering, selection, keyboard focus, source links and responsive layouts. Physical touch devices, screen-reader use, and real location permissions still require the remaining checks in `VERIFICATION.md`.
 - The initial page has no server rendering or persistent map URL. Add routing only when a phase requires it.
 - A free initial frontend and basemap do not imply free global ingestion, storage, enrichment, and tile distribution at scale.
 
@@ -41,6 +41,15 @@ The owner has not selected a code license. MIT was recommended, but no answer wa
 - Preserve string building IDs in renderer properties with `promoteId` and property-based picking/filtering; raw UUID feature IDs are coerced by vector serialization.
 - Reject unsupported nested outer islands explicitly. Preserve independently building-tagged inner member ways during relation deduplication.
 
+## Phase 03 decisions
+
+- Use one nonmodal information panel with native selection controls, desktop/sidebar and mobile/compact layouts, and an independently scrolling body.
+- Keep panel visibility separate from selected identity; close retains highlight and supports reopening. Explicit map selection focuses the heading, while panel navigation retains control focus.
+- Show known imported attributes and visible source links. Keep identifiers and unchanged raw claims in an expandable details section. Attributes not imported are described as unavailable in the current records, not unknowable.
+- Preserve the blank-map CSS import order and specific container sizing selector, with both stylesheet order tests retained.
+
 ## Next useful milestone
 
-Review the Chicago selection experience, then follow `phases/phase-03-information-panel.md`. Expand sourced fields and presentation incrementally. The current data size supports static delivery; backend persistence still needs a concrete query/editing requirement.
+Phase 04 is complete locally; see [the report](PHASE_04.md). Keep every raw tag claim and source reference, normalize only supported syntax, and leave identifiers unresolved. Building type and use stay separate; dates preserve precision/uncertainty; website claims are activated only after validation. Missing metadata is data coverage, not a loading state. The same cache and dependencies are retained.
+
+This implementation stops before Phase 05. Any later enrichment must account for zero architect IDs, sparse architect text, and repeated building Q IDs without forcing matches. The current data size supports static delivery; backend persistence still needs a concrete query/editing requirement. The existing Sites lookup now succeeds with owner-only access; the prior `project_not_found` result is historical. No deployment was requested/performed during Phase 04, so publishing remains unverified.

@@ -27,8 +27,8 @@ snapshot and derived database are available for provenance and redistribution:
 
 - `source.json`: unchanged OSM response (456,849 bytes).
 - `acquisition.json`: query, endpoint, actual retrieval time, and raw SHA-256.
-- `buildings.geojson`: normalized geometry, canonical IDs, name claims, source
-  references, display name, centroid, and dataset metadata (304,634 bytes).
+- `buildings.geojson`: schema v2 geometry, canonical IDs, 1,839 sourced tag claims,
+  separate normalizations, display name, centroid, coverage, and diagnostics (745,952 bytes).
 - `LICENSE.md`: ODbL notice, attribution, and transformation explanation.
 
 The checksum is checked before import. `--check` verifies that rebuilding is
@@ -74,4 +74,28 @@ scale. A centroid can lie in a courtyard or outside a concave outline; it is not
 an entrance or guaranteed interior point. Geometry is kept separately from raw
 records; only winding changes. Raw names remain in claims while display names
 trim whitespace. Unknown names remain null. Other tags remain in the raw snapshot
-for later phases, without inferred architecture facts.
+that are outside the supported claim set remain in the raw snapshot, without inferred facts.
+
+## Phase 04 claims and diagnostics
+
+`architecture.py` defines the supported tags and conservative parsers. See
+[Phase 04 semantics and coverage](../../docs/PHASE_04.md) for primary OSM references,
+exact supported syntax, absent tags, and examples. Every claim preserves its raw
+string and source record. Normalized architect strings never become identities;
+start dates never automatically become completion years. Unsupported dates,
+numbers and URLs stay raw with explanations. Missing tags produce no claim.
+
+Imports reconstruct the entire artifact deterministically, never append claims.
+The natural claim key within this one-snapshot adapter is source ID + record ID +
+tag. One semicolon list is one claim; repeated external identifiers on different
+footprints are not merged. The frontend validates normalized values against raw
+strings, source references, duplicate claims, and reported coverage before display.
+
+Each import prints footprint counts, exclusions, `tag_coverage` for every supported
+tag (including zeros), and `claim_diagnostics` for unsupported/invalid inputs.
+These diagnostics also ship in GeoJSON metadata with source references. Current
+cache: 345 buildings, 1,839 claims, zero claim diagnostics; supported values all
+normalize conservatively. This does not certify their factual accuracy. Synthetic
+tests cover blank tags, list ambiguity, dates, units, malformed numbers and unsafe
+websites. The same cache/checksum is used throughout Phase 04; the acquisition
+command above is documentation for a future intentional update, not part of reimport.

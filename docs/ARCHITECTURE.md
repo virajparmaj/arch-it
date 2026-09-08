@@ -8,7 +8,7 @@ The browser renders a React 18 application written in strict TypeScript. Vite se
 
 ## Module boundaries
 
-- `apps/web/src/App.tsx`: application layout, selected city, and coordinate readout.
+- `apps/web/src/App.tsx`: application layout, city/camera requests, selected building, panel visibility, and focus restoration.
 - `apps/web/src/features/map/MapCanvas.tsx`: owns exactly one renderer per mount; subscribes to map/browser events; disposes resources on unmount or retry.
 - `apps/web/src/features/map/config.ts`: initial view, city destinations, public basemap configuration, coordinate formatting.
 - `apps/web/src/types/map.ts`: small frontend contracts, not speculative database schemas.
@@ -26,13 +26,15 @@ Use one root npm manifest and lockfile. Vite's root is `apps/web`; its environme
 
 ## Building layer and data boundary
 
-The `features/buildings` module fetches and validates a bundled GeoJSON snapshot, mounts a selectable layer, and renders a compact inspection card. Picking is restricted to that layer. Renderer properties retain `building_id` and the source uses `promoteId`; selection never trusts unstable basemap or serialized UUID feature IDs. Fetch retries are independent of basemap retries. A destroyed renderer is detected before layer cleanup.
+The `features/buildings` module fetches and validates a bundled GeoJSON snapshot, mounts a selectable layer, and renders a reusable information panel with a small typed fact renderer. Picking is restricted to that layer. Renderer properties retain `building_id` and the source uses `promoteId`; selection never trusts unstable basemap or serialized UUID feature IDs. Fetch retries are independent of basemap retries. A destroyed renderer is detected before layer cleanup.
 
 The Python adapter, raw/derived records, identity rules, licensing, source comparison, and limitations are documented in [phase 02](PHASE_02.md) and the [pipeline README](../pipelines/openstreetmap/README.md). Provenance now exists in the first imported dataset, with raw source kept separately from normalized/displayed values.
 
 ## Next architecture checkpoint
 
-Phase 03 should expand the building inspection UI on the existing typed, sourced data contract. The ~305 kB derived artifact is small enough for static delivery; no spatial server is justified yet.
+Phase 04 extends the information panel with claims from the same OSM cache. See [semantics and coverage](PHASE_04.md). Selection and visibility remain separate; explicit navigation requests recenter the map, while close preserves the selected record. Native controls expose keyboard selection without routing or search. The ~746 kB derived artifact remains suitable for this bounded static pilot; no spatial server was introduced.
+
+`pipelines/openstreetmap/architecture.py` owns supported-tag parsing, per-claim diagnostics and coverage. Schema v2 stores unchanged `value` separately from typed `normalized` values. One source-record/tag yields one claim; semicolon lists are not entity relationships. The frontend `claims.ts` validates normalization against raw strings and validates website URLs again at render time. `data.ts` checks provenance, unique records/claims and coverage consistency. `BuildingPanel` shows useful attributes, individual OSM source links, missing architecture copy and expandable original claims. Identifiers stay unresolved, including repeated Q IDs on different footprints. There are no runtime enrichment requests.
 
 Provenance began with the first import. Separate external source records, canonical identity matches, sourced claims, and display preferences. Use stable internal IDs plus source namespace/type/ID; do not use names or transient basemap feature IDs as canonical identity. Distinguish OSM ways from relations. Represent people and organizations separately, with sourced contributor roles. Keep missing facts absent and conflicting claims intact. Phase 10 improves provenance UI rather than adding provenance storage for the first time.
 

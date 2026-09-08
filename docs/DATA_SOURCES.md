@@ -13,7 +13,9 @@
 
 The browser fetches styles, tile data, fonts, and sprites from the map provider and related resource endpoints. There is no analytics service or application-owned location storage. The provider receives ordinary requests (including the areas whose tiles are requested). Geolocation runs only when the user presses its control, and a resulting map movement requests tiles for that area.
 
-City labels and camera positions are navigation presets. Phase 02 also ships a bounded OSM building dataset: 345 complete footprints, 161 sourced names, original raw tags, and per-record source references. Raw data and derived GeoJSON retain ODbL attribution and a separate data license notice. See [phase 02](PHASE_02.md) and [the import procedure](../pipelines/openstreetmap/README.md). No architecture descriptions or external photographs are copied into this prototype.
+City labels and camera positions are navigation presets. The bounded OSM dataset has 345 complete footprints and 161 sourced names. Phase 04 projects 1,839 claims from the unchanged cached tags, retaining original values, record references and separate conservative normalizations. Architecture coverage includes 9 architect strings, 10 start dates, 46 heights, 183 level counts and 26 websites; missing values remain absent. See [Phase 04 semantics and primary OSM documentation](PHASE_04.md) and [the import procedure](../pipelines/openstreetmap/README.md). Raw data and derived GeoJSON retain ODbL attribution and a separate data license notice. No new datasets, architecture descriptions or external photographs are copied into this milestone.
+
+Attribute source links point to the current OSM record, which can change after acquisition. The downloadable original response, tag path, source record, snapshot timestamp and checksum preserve the historical evidence. A normalized field or valid website URL is not independent verification of its content. Website destinations load only after explicit activation; unsafe/unsupported URLs remain text. OSM-supplied Q identifiers stay unresolved strings and trigger no Wikidata requests.
 
 ## Future data
 
