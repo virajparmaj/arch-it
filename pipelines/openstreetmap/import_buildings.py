@@ -14,6 +14,8 @@ from shapely.geometry.base import BaseGeometry
 from shapely.geometry.polygon import orient
 from shapely.ops import polygonize, unary_union
 
+from architecture import claim_coverage, import_claims
+
 ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = ROOT / "apps/web/public/data/chicago-loop"
 BBOX = [-87.634, 41.882, -87.624, 41.890]
@@ -78,10 +80,7 @@ def normalize(element: dict[str, Any], shape: Polygon | MultiPolygon, source_id:
     object_type, object_id = element["type"], element["id"]
     external_id = f"osm:{object_type}/{object_id}"
     raw_name = element.get("tags", {}).get("name")
-    claims = []
-    if raw_name is not None:
-        claims.append({"property": "name", "value": raw_name, "source_id": source_id,
-                       "source_record_id": external_id, "raw_property": "tags.name"})
+    claims = import_claims(element.get("tags", {}), source_id, external_id)
     centroid = shape.centroid
     return {
         "type": "Feature",
@@ -132,7 +131,7 @@ def build(raw: dict, acquisition: dict) -> dict:
     return {
         "type": "FeatureCollection", "features": features,
         "metadata": {
-            "schema_version": 1, "dataset_id": "chicago-loop", "label": "Chicago Loop pilot",
+            "schema_version": 2, "dataset_id": "chicago-loop", "label": "Chicago Loop pilot",
             "bbox": BBOX, "selection_rule": "Complete valid footprints fully within the pilot boundary",
             "centroid_method": "Area-weighted planar centroid of EPSG:4326 geometry; approximate at city scale",
             "source": {
@@ -149,6 +148,10 @@ def build(raw: dict, acquisition: dict) -> dict:
                        "excluded": len(exclusions)},
             "exclusion_reasons": dict(sorted(Counter(e["reason"] for e in exclusions).items())),
             "excluded_records": exclusions,
+            "tag_coverage": claim_coverage(features),
+            "claim_diagnostics": [claim for feature in features
+                                  for claim in feature["properties"]["claims"]
+                                  if claim["status"] != "normalized"],
         },
     }
 
@@ -175,6 +178,8 @@ def main() -> None:
         output.write_text(content)
     print(json.dumps(result["metadata"]["counts"]))
     print(json.dumps(result["metadata"]["exclusion_reasons"]))
+    print(json.dumps(result["metadata"]["tag_coverage"], sort_keys=True))
+    print(json.dumps({"claim_diagnostics": result["metadata"]["claim_diagnostics"]}))
 
 
 if __name__ == "__main__":

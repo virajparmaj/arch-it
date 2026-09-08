@@ -59,7 +59,7 @@ class ImportTests(unittest.TestCase):
             self.assertAlmostEqual(geometry.centroid.x, props["centroid"][0], places=6)
             self.assertAlmostEqual(geometry.centroid.y, props["centroid"][1], places=6)
             if props["name"] is None:
-                self.assertEqual(props["claims"], [])
+                self.assertFalse(any(c["property"] == "name" for c in props["claims"]))
 
     def test_holes_are_not_clickable_building_area(self):
         outer = [(0, 0), (10, 0), (10, 10), (0, 10), (0, 0)]

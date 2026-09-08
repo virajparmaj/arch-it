@@ -1,4 +1,5 @@
-import type { BuildingDataset } from '../../types/building'
+import { CLAIM_PROPERTIES, type BuildingDataset, type BuildingClaim } from '../../types/building'
+import { validClaim } from './claims'
 
 export const BUILDINGS_URL = '/data/chicago-loop/buildings.geojson'
 export const PILOT_BBOX: [number, number, number, number] = [-87.634, 41.882, -87.624, 41.890]
@@ -28,8 +29,9 @@ function validFeature(value: unknown, sourceId: string): boolean {
   if (p.name !== null && typeof p.name !== 'string') return false
   if (p.source_url !== `https://www.openstreetmap.org/${(p.source_record_id as string).slice(4)}`) return false
   if (!point(p.centroid) || !record(p.geometry_source) || p.geometry_source.source_id !== sourceId || p.geometry_source.source_record_id !== p.source_record_id) return false
-  if (!Array.isArray(p.claims) || !p.claims.every((claim) => record(claim) && claim.property === 'name' && typeof claim.value === 'string' && claim.source_id === sourceId && claim.source_record_id === p.source_record_id)) return false
-  if (p.name !== null && !p.claims.some((claim) => claim.value.trim() === p.name)) return false
+  if (!Array.isArray(p.claims) || !p.claims.every((claim) => validClaim(claim, sourceId, p.source_record_id as string))) return false
+  if (new Set(p.claims.map((claim) => claim.property)).size !== p.claims.length) return false
+  if (p.name !== (p.claims.find((claim) => claim.property === 'name')?.value.trim() || null)) return false
   return geometry.type === 'Polygon' ? polygon(geometry.coordinates)
     : geometry.type === 'MultiPolygon' && Array.isArray(geometry.coordinates) && geometry.coordinates.length > 0 && geometry.coordinates.every(polygon)
 }
@@ -38,14 +40,27 @@ export function parseBuildingDataset(value: unknown): BuildingDataset {
   const fail = () => { throw new Error('The building snapshot is invalid or incomplete.') }
   if (!record(value) || value.type !== 'FeatureCollection' || !record(value.metadata) || !Array.isArray(value.features)) return fail()
   const metadata = value.metadata
-  if (metadata.schema_version !== 1 || metadata.dataset_id !== 'chicago-loop' || !record(metadata.source) || !record(metadata.counts)) return fail()
+  if (metadata.schema_version !== 2 || metadata.dataset_id !== 'chicago-loop' || !record(metadata.source) || !record(metadata.counts)) return fail()
   if (JSON.stringify(metadata.bbox) !== JSON.stringify(PILOT_BBOX)) return fail()
   const source = metadata.source
   if (typeof source.id !== 'string' || source.name !== 'OpenStreetMap' || source.license !== 'ODbL-1.0') return fail()
+  if (typeof source.raw_sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(source.raw_sha256)) return fail()
   if (typeof source.retrieved_at !== 'string' || !Number.isFinite(Date.parse(source.retrieved_at)) || typeof source.snapshot_at !== 'string' || !Number.isFinite(Date.parse(source.snapshot_at))) return fail()
   if (value.features.length < 1 || value.features.length > 2000 || metadata.counts.imported !== value.features.length) return fail()
   if (!value.features.every((feature) => validFeature(feature, source.id as string))) return fail()
   if (new Set(value.features.map((feature) => feature.id)).size !== value.features.length) return fail()
+  if (new Set(value.features.map((feature) => feature.properties.source_record_id)).size !== value.features.length) return fail()
+  if (!record(metadata.tag_coverage) || !Array.isArray(metadata.claim_diagnostics)) return fail()
+  const claims: BuildingClaim[] = value.features.flatMap((feature) => feature.properties.claims)
+  for (const property of CLAIM_PROPERTIES) {
+    const coverage = metadata.tag_coverage[property]
+    const tagged = claims.filter((claim) => claim.property === property)
+    if (!record(coverage) || coverage.present !== tagged.length) return fail()
+    for (const status of ['normalized', 'raw_only', 'invalid'] as const) {
+      if (coverage[status] !== tagged.filter((claim) => claim.status === status).length) return fail()
+    }
+  }
+  if (JSON.stringify(metadata.claim_diagnostics) !== JSON.stringify(claims.filter((claim) => claim.status !== 'normalized'))) return fail()
   return value as unknown as BuildingDataset
 }
 
