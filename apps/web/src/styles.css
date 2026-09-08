@@ -52,7 +52,8 @@ h1 { margin: 24px 0 16px; font-family: Georgia, 'Times New Roman', serif; font-s
 .about summary { cursor: pointer; width: fit-content; }
 .about p { margin: 8px 0 0; }
 .map-panel { position: relative; min-width: 0; overflow: hidden; background: #e9edf0; }
-.map-canvas { position: absolute; inset: 0; }
+/* Keep the renderer sized even if its own .maplibregl-map rule loads later. */
+.map-panel > .map-canvas { position: absolute; inset: 0; }
 .map-heading { position: absolute; z-index: 2; left: 26px; top: 25px; height: 47px; padding: 0 17px; display: flex; align-items: center; gap: 11px; background: #ffffffed; border: 1px solid #dce0e4; border-radius: 8px; box-shadow: 0 2px 8px #24334408; font-size: .875rem; font-weight: 600; pointer-events: none; }
 .map-heading > svg { color: var(--accent); }
 .heading-divider { color: #b3b9bd; font-weight: 400; margin: 0 1px; }

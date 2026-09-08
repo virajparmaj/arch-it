@@ -30,6 +30,7 @@ const doubles = vi.hoisted(() => {
   class Renderer extends EventSource {
     styleReady = false
     flyTo = vi.fn()
+    jumpTo = vi.fn()
     remove = vi.fn(() => this.emit('remove'))
     addControl = vi.fn()
     addSource = vi.fn(() => { if (!this.styleReady) throw new Error('Style is not done loading.') })
@@ -189,5 +190,19 @@ describe('map lifecycle and recovery', () => {
     expect(replacement.addSource).not.toHaveBeenCalled()
     act(() => replacement.emit('load'))
     expect(replacement.addSource).toHaveBeenCalledTimes(2)
+  })
+
+  it('keeps the selected footprint in view when the panel resizes the map', () => {
+    const buildings = parseBuildingDataset(JSON.parse(readFileSync('apps/web/public/data/chicago-loop/buildings.geojson', 'utf8')))
+    const selected = buildings.features[0]
+    act(() => root.render(<MapCanvas destination={{ city: CITIES[0], request: 0 }} onViewChange={onViewChange} onExplore={onExplore} buildings={buildings} selectedBuildingId={selected.id} />))
+    act(() => latestMap().emit('load'))
+    act(() => latestMap().emit('resize'))
+    // Resizing stops a running flight: finish at an inspectable zoom, including
+    // when Browse was opened from another city below the footprint minimum zoom.
+    expect(latestMap().jumpTo).toHaveBeenCalledWith({ center: selected.properties.centroid, zoom: 16 })
+    const map = latestMap()
+    act(() => root.render(null))
+    expect(map.handlers.get('resize')).toBeUndefined()
   })
 })

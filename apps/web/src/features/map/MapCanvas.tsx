@@ -6,13 +6,13 @@ import { INITIAL_CITY, MAP_STYLE_URL } from './config'
 import type { MapDestination, MapView } from '../../types/map'
 import type { BuildingDataset, BuildingFeature, BuildingMiss } from '../../types/building'
 import { mountBuildingLayers, setBuildingSelection } from '../buildings/layers'
-import 'maplibre-gl/dist/maplibre-gl.css'
 
 // MapLibre 6 ships a separate worker; Vite must bundle its sibling imports too.
 setWorkerUrl(workerUrl)
 
 interface MapCanvasProps {
   destination: MapDestination
+  buildingDestination?: { building: BuildingFeature } | null
   onViewChange: (view: MapView) => void
   onExplore: () => void
   buildings?: BuildingDataset | null
@@ -24,7 +24,7 @@ interface MapCanvasProps {
 type MapStatus = 'loading' | 'ready' | 'unavailable' | 'unsupported'
 const CONTEXT_LOST_NOTICE = 'The map display was interrupted. Reload the map to restore it.'
 
-export default function MapCanvas({ destination, onViewChange, onExplore, buildings, selectedBuildingId, onBuildingSelect, onBuildingMiss }: MapCanvasProps) {
+export default function MapCanvas({ destination, buildingDestination, onViewChange, onExplore, buildings, selectedBuildingId, onBuildingSelect, onBuildingMiss }: MapCanvasProps) {
   const container = useRef<HTMLDivElement>(null)
   const instance = useRef<Map | null>(null)
   const lastView = useRef({ center: INITIAL_CITY.center, zoom: INITIAL_CITY.zoom })
@@ -136,6 +136,14 @@ export default function MapCanvas({ destination, onViewChange, onExplore, buildi
   }, [destination])
 
   useEffect(() => {
+    if (!buildingDestination) return
+    const center = buildingDestination.building.properties.centroid
+    const zoom = Math.max(lastView.current.zoom, 16)
+    lastView.current = { center, zoom }
+    instance.current?.flyTo({ center, zoom, duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 600 })
+  }, [buildingDestination])
+
+  useEffect(() => {
     // Readiness belongs to a renderer instance, not a boolean retained across HMR/retry.
     if (!loadedMap || loadedMap !== instance.current || !buildings || !onBuildingSelect || !onBuildingMiss) return
     return mountBuildingLayers(loadedMap, buildings, onBuildingSelect, onBuildingMiss)
@@ -143,6 +151,17 @@ export default function MapCanvas({ destination, onViewChange, onExplore, buildi
 
   useEffect(() => {
     if (loadedMap && loadedMap === instance.current && buildings) setBuildingSelection(loadedMap, selectedBuildingId ?? null)
+  }, [loadedMap, buildings, selectedBuildingId])
+
+  useEffect(() => {
+    if (!loadedMap || loadedMap !== instance.current) return
+    const selected = buildings?.features.find((building) => building.id === selectedBuildingId)
+    if (!selected) return
+    // A responsive panel can resize the map during a flight. Keep the selected
+    // footprint in the resized viewport rather than retaining a stale flight anchor.
+    const keepSelectionVisible = () => loadedMap.jumpTo({ center: selected.properties.centroid, zoom: Math.max(loadedMap.getZoom(), 16) })
+    loadedMap.on('resize', keepSelectionVisible)
+    return () => { loadedMap.off('resize', keepSelectionVisible) }
   }, [loadedMap, buildings, selectedBuildingId])
 
   function retry() {
