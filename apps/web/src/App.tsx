@@ -1,10 +1,10 @@
-import { lazy, Suspense, useCallback, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { ArrowDown, ArrowUpRight, Compass, Globe2, MapPin } from 'lucide-react'
 import { CITIES, INITIAL_CITY, formatCoordinate } from './features/map/config'
 import type { City, MapView } from './types/map'
 import type { BuildingFeature, BuildingMiss } from './types/building'
 import { useBuildings } from './features/buildings/useBuildings'
-import { BuildingCard } from './features/buildings/BuildingCard'
+import { BuildingPanel } from './features/buildings/BuildingPanel'
 import { isInPilot } from './features/buildings/data'
 
 const MapCanvas = lazy(() => import('./features/map/MapCanvas'))
@@ -16,9 +16,33 @@ export default function App() {
   const onExplore = useCallback(() => setActiveCity(null), [])
   const buildings = useBuildings()
   const [selected, setSelected] = useState<BuildingFeature | null>(null)
+  const [panelOpen, setPanelOpen] = useState(false)
+  const [focusRequest, setFocusRequest] = useState(0)
+  const [buildingDestination, setBuildingDestination] = useState<{ building: BuildingFeature } | null>(null)
+  const mapRegion = useRef<HTMLElement>(null)
+  const returnFocus = useRef<HTMLElement | null>(null)
   const [miss, setMiss] = useState<BuildingMiss | null>(null)
-  const onBuildingSelect = useCallback((building: BuildingFeature) => { setSelected(building); setMiss(null) }, [])
-  const onBuildingMiss = useCallback((reason: BuildingMiss) => { setSelected(null); setMiss(reason) }, [])
+  const onBuildingSelect = useCallback((building: BuildingFeature) => {
+    returnFocus.current = mapRegion.current?.querySelector('canvas') ?? mapRegion.current
+    setSelected(building); setPanelOpen(true); setFocusRequest((value) => value + 1); setMiss(null)
+  }, [])
+  const onBuildingMiss = useCallback((reason: BuildingMiss) => {
+    setSelected(null); setPanelOpen(false); setMiss(reason)
+    mapRegion.current?.querySelector('canvas')?.focus({ preventScroll: true })
+  }, [])
+  const closePanel = useCallback(() => {
+    setPanelOpen(false)
+    const target = returnFocus.current?.isConnected ? returnFocus.current : mapRegion.current
+    target?.focus({ preventScroll: true })
+  }, [])
+  useEffect(() => {
+    if (!panelOpen) return
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && !event.defaultPrevented) { event.preventDefault(); closePanel() }
+    }
+    window.addEventListener('keydown', escape)
+    return () => window.removeEventListener('keydown', escape)
+  }, [panelOpen, closePanel])
   const inPilot = isInPilot(view.longitude, view.latitude)
   const onViewChange = useCallback((next: MapView) => { setView(next); setMiss(null) }, [])
   let pilotSummary = 'Building snapshot unavailable'
@@ -31,6 +55,8 @@ export default function App() {
 
   function retryBuildings() {
     setSelected(null)
+    setPanelOpen(false)
+    setBuildingDestination(null)
     setMiss(null)
     buildings.retry()
   }
@@ -39,23 +65,46 @@ export default function App() {
     setDestination((previous) => ({ city, request: previous.request + 1 }))
     setActiveCity(city.id)
     setSelected(null)
+    setPanelOpen(false)
+    setBuildingDestination(null)
     setMiss(null)
   }
 
+  function navigateBuilding(building: BuildingFeature) {
+    setSelected(building)
+    setBuildingDestination({ building })
+    setMiss(null)
+    setActiveCity(null)
+  }
+
+  function openPanel(trigger: HTMLButtonElement) {
+    if (!buildings.data) return
+    returnFocus.current = trigger
+    if (!selected) {
+      const nearest = buildings.data.features.reduce((best, item) => {
+        const distance = (feature: BuildingFeature) => Math.hypot(feature.properties.centroid[0] - view.longitude, feature.properties.centroid[1] - view.latitude)
+        return distance(item) < distance(best) ? item : best
+      })
+      navigateBuilding(nearest)
+    }
+    setPanelOpen(true)
+    setFocusRequest((value) => value + 1)
+  }
+
   return (
-    <div className={`atlas ${selected ? 'has-selection' : ''}`}>
+    <div className={`atlas ${panelOpen ? 'has-selection' : ''}`}>
       <a className="skip-link" href="#world-map">Skip to map</a>
       <aside className="sidebar" aria-label="Explore the atlas">
         <header className="brand">
           <img className="brand-mark" src="/favicon.svg" width="40" height="40" alt="" />
           <span className="brand-name">arch it<span className="brand-period">.</span></span>
-          <span className="edition">ATLAS / 02</span>
+          <span className="edition">ATLAS / 04</span>
         </header>
 
-        {selected && buildings.data ? <BuildingCard building={selected} metadata={buildings.data.metadata} onClose={() => setSelected(null)} /> : <div className="sidebar-content">
+        {panelOpen && selected && buildings.data ? <BuildingPanel building={selected} buildings={buildings.data.features} metadata={buildings.data.metadata} focusRequest={focusRequest} onSelect={navigateBuilding} onClose={closePanel} /> : <div className="sidebar-content">
           <div className="section-label"><span className="live-dot" /> THE BUILT WORLD, OPEN TO EXPLORE</div>
           <h1>Every building<br />starts somewhere.</h1>
-          <p className="intro">Select a highlighted footprint to see its geometry, identity, and source.</p>
+          <p className="intro">Select a highlighted footprint to discover what is known, with sources close at hand.</p>
           <div className="city-heading"><h2>Choose a starting point</h2><ArrowDown size={16} aria-hidden="true" /></div>
           <nav className="city-list" aria-label="Jump to a city">
             {CITIES.map((city, index) => (
@@ -76,14 +125,14 @@ export default function App() {
 
         <footer className="sidebar-footer">
           <span><Globe2 size={15} aria-hidden="true" /> Made with open map data</span>
-          <details className="about"><summary>About this atlas</summary><p>Arch It is an architecture discovery project. Select imported footprints in the Chicago Loop pilot. Architecture metadata and worldwide building coverage are coming later.</p><p>Map data © OpenStreetMap contributors. You can explore without sharing your location.</p></details>
+          <details className="about"><summary>About this atlas</summary><p>Arch It is an architecture discovery project. Select imported footprints in the Chicago Loop pilot to read available OSM building attributes. Metadata coverage varies by building.</p><p>Map data © OpenStreetMap contributors. You can explore without sharing your location.</p></details>
         </footer>
       </aside>
 
-      <main id="world-map" className="map-panel" tabIndex={-1} aria-label="World map">
+      <main id="world-map" className="map-panel" ref={mapRegion} tabIndex={-1} aria-label="World map">
         <div className="map-heading"><Compass size={19} strokeWidth={1.6} aria-hidden="true" /><span>Explore</span><span className="heading-divider">/</span><span className="heading-secondary">Chicago pilot</span></div>
         <Suspense fallback={<div className="map-message" role="status"><span className="loading-dot" /><strong>Opening the atlas…</strong></div>}>
-          <MapCanvas destination={destination} onViewChange={onViewChange} onExplore={onExplore}
+          <MapCanvas destination={destination} buildingDestination={buildingDestination} onViewChange={onViewChange} onExplore={onExplore}
             buildings={buildings.data} selectedBuildingId={selected?.id ?? null}
             onBuildingSelect={onBuildingSelect} onBuildingMiss={onBuildingMiss} />
         </Suspense>
@@ -92,6 +141,7 @@ export default function App() {
           {buildings.status === 'error' && <><p>Building footprints couldn’t load. You can still explore the map.</p><button onClick={retryBuildings}>Retry footprints</button></>}
           {buildings.status === 'ready' && <>
             <p>{selectionInstruction}</p>
+            <button className="browse-buildings" onClick={(event) => openPanel(event.currentTarget)}>{panelOpen ? 'Focus building details' : selected ? 'Reopen building details' : 'Browse pilot buildings'}</button>
             {(!inPilot || miss === 'outside' || miss === 'zoom' || view.zoom < 14) && <button onClick={() => goToCity(INITIAL_CITY)}>Return to pilot</button>}
           </>}
         </div>
